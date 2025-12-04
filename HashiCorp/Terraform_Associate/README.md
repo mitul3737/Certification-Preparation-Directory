@@ -3,7 +3,7 @@ Go to this [page](https://developer.hashicorp.com/terraform/tutorials/aws-get-st
 
 ![alt text](image-3.png)
 
-A terraform file generally looks like  this
+A Terraform (.tf) file generally looks like  this
 
 ![alt text](image.png)
 
@@ -11,7 +11,7 @@ When we want to create an AWS instance using a terraform file , this may look li
 
 ![alt text](image-1.png)
 
-An S3 object in AWS might be created like this
+For example, An S3 object in AWS might be created like this
 
 ![alt text](image-2.png)
 
@@ -19,29 +19,36 @@ An S3 object in AWS might be created like this
 
 ### But what is a resource?
 
-Resource is an object that terraform manages for us. It can be a local file or, an AWS object or service or many more!!
+A resource is an object that Terraform manages for us. It can be a local file or an AWS object or service or many more!!
 
 ![alt text](image-4.png)
 
 
 # The workflow
 
-First we write the configuration file (local.tf)
+First, we write the configuration file (local.tf)
 
-Then initialize, plan and apply the changes.
+Then, initialize, plan, and apply the changes.
 ![alt text](image-5.png)
 
-Now, let's create a local.tf file to generate a pets.txt. It should have the content "We love cat"
+Now, let's create a local.tf file to generate a pets.txt (mentioned in the filename) . It should have the content "We love cat" (mentioned in the content)
+We are following this [documentation](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file)
+
 ![alt text](image-6.png)
 
-once done, let's write terraform init
+Once done, let's write terraform init
 ![alt text](image-7.png)
 
-Then we will use terraform plan to see what terraform will execute now
+Then we will use Terraform plan to see what Terraform will execute now
 
 ![alt text](image-8.png)
 
-You can see that the content is what we wrote, also, the filename should be pets.txt and + icon means these should be added.
+These variable informations are available in the official documentation.
+<img width="689" height="647" alt="image" src="https://github.com/user-attachments/assets/6d01301e-f5a4-4bd2-900c-345d584ad6c3" />
+
+
+
+You can see that the content is what we wrote, also, the filename should be pets.txt, and + icon means these should be added.
 
 We can also see "+create" meaning it will be created.
 
