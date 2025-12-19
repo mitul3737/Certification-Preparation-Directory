@@ -390,3 +390,131 @@ It's called resource targeting, which we did only for the resource "random_strin
 
 # Data Source
 
+Earlier we have seen how we can use one resource in another
+
+![alt text](image-66.png)
+
+Here you can see that we are using the public key created by resource (aws_key_pair.alpha) while creating an instance (aws_instance.cerberus)
+
+Now assume that, we have created key pair manually and saved that in AWS. We then want to use that while creating a resource using terraform.
+
+
+![alt text](image-67.png)
+
+To do that, we need to use data source here.We need to create a "data" block for that. Then set the key value pair (key_name="alpha"). Later we can use that key while creating an IAM instance.
+
+
+In the documentation for aws_key_pair, you can check that we had options to add key_name, key_id, filters in the data source block
+![alt text](image-68.png)
+
+
+So, in general there is a difference between "resource" block and "data" block (data resource : which is not created using terraform rather created manually or imported from other media)
+
+# Terraform state
+
+When we create any resource using the apply command, a .tfstate file is created within the same folder
+
+![alt text](image-69.png)
+Terraform also creates a backup of the file incase someone mistakenly deleted the .tfstate file.
+
+So, what does this .tfstate file store? It stores all of the information about the resources we are creating
+![alt text](image-70.png)
+
+So, how does it work?
+
+When we use terraform plan, it checks the .tfstate file and compares prposed changes with the current .tfstate file.
+
+
+For exaple, let's assume this is the current .tfstate file
+
+
+![alt text](image-72.png)
+Now, we have made changes to the variables.tf file
+
+![alt text](image-73.png)
+
+Once pressed the terraform plan command, it will now compare these changes. You can see that, it found a different in the variable value for "instance_type"
+![alt text](image-74.png)
+![alt text](image-75.png)
+
+So, .tfstate file works as a blueprint.
+
+It also stores the dependency. So, this helps terraform create or delete the dependency resources before another ones
+
+![alt text](image-76.png)
+
+In case, we don't want .tfstate to get the updated information, we can use -refresh=false 
+
+![alt text](image-71.png)
+
+
+One of the issues of .tfstate file is, it stores sensitive informations. So, we should not upload it to version control system like GitHub, GitLab etc. You can upload normal .tf files in these platforms.
+
+Rather it should be stored in Amazon s3, Terraform cloud etc.
+![alt text](image-77.png)
+
+
+# Remote state
+Earlier we dealth with local .tfstate files kept in our laptop, pc etc.
+
+Earlier we mentioned, we should upload the .tfstate files in Amazon s3 etc.Moreover, there is a reason why can't upload them on GitHub etc.
+
+When multiple team mates are using same resources to work on, terraform needs state lock mechanism to apply the changes. 
+
+![alt text](image-78.png)
+![alt text](image-79.png)
+
+Sadly, GitHub and other version control system does not provide that.
+
+To work with team mates with same resources, we need to move to cloud. But we can't move these .tfstate files to GitHub etc. So, that's why we should uplaod them to AWS S3, Terraform cloud, HashiCorp Consul etc.
+
+![alt text](image-80.png)
+
+So, once we are using remote statefile, it's automatically updated everytime we use terraform apply.
+
+But how to create remote state file when we already have a local state file ?
+
+![alt text](image-81.png)
+
+Here you can see main.tf file there to create some resources. Also a .tfstate file is created there.
+
+To have remote state, we need another .tf file which will have terraform block
+
+
+![alt text](image-82.png)
+
+Then apply the changes
+
+![alt text](image-84.png)
+
+
+Here s3 resource is created. But, we have no files to track. Then we need to use terraform init command to copy the .tfstate file we have loally
+
+![alt text](image-83.png)
+
+Now, as the local file is copied in the cloud, we can remove this file locally.
+![alt text](image-85.png)
+
+So, if there are any changes ; it will be compared with the remove state file.
+
+
+# Dependency lock file
+
+
+![alt text](image-86.png)
+
+When the init command was used, it updates the lock file or updates it. 
+![alt text](image-87.png)
+
+When you plan to update providers, you can update the providers.tf file
+
+![alt text](image-88.png)
+
+Then use the terraform init -upgrade command to upgrade those dependencies in the lock file.
+
+![alt text](image-89.png)
+
+
+Note: You need to upload this lock file in platforms like GitHub etc to ensure other team mates can access the updated dependency info.
+
+
