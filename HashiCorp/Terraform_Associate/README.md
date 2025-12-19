@@ -518,3 +518,433 @@ Then use the terraform init -upgrade command to upgrade those dependencies in th
 Note: You need to upload this lock file in platforms like GitHub etc to ensure other team mates can access the updated dependency info.
 
 
+# Some terraform commands and their usage
+
+terraform fmt command makes our code readable
+
+![alt text](image-91.png)
+
+From this to this........
+![alt text](image-92.png)
+
+terraform validate command checks if we have made any mistake in our code.
+
+terraform show command shows current state.
+
+terraform show -json can be used to show the code in json format.
+![alt text](image-90.png)
+
+terraform providers show the providers we have used as of now.
+
+terraform output prints the output from the output block
+
+![alt text](image-93.png)
+
+terraform plan refreshes terraform states prior to plan, compares the desired state with the current state, shows an execution plan.
+
+![alt text](image-94.png)
+
+terraform apply -refresh-only will refresh the state files if there was any manual changes made to resources outside terraform.
+
+
+for terraform state files, we should not use vim editor etc, rather use list, mv, pull, rm, show, push etc.
+
+
+![alt text](image-95.png)
+
+terraform state list command shows existing resources in the state file
+
+![alt text](image-96.png)
+
+Again, terraform state show < resource > will show the attributes for the resource
+
+![alt text](image-97.png)
+
+terraform state mv < > < > moves or, renames file
+
+![alt text](image-98.png)
+Here, the name has been changed.
+
+![alt text](image-99.png)
+
+Then we should use terraform to create this resource.
+
+
+When we have the remote state file, we might need to locally download it. We can do that using terraform state pull command.
+
+![alt text](image-100.png)
+
+We can also pass the output generated (after using the state pull command) to a JSON query to filter out data
+
+
+We can use terraform state rm command to remove resources from the state file
+
+![alt text](image-101.png)
+
+Note: once we removed it from statefile, it's not actually removed. Terraform won't just handle the resource from now on. So, manually delete the resource.
+
+
+terraform state push command overrides the remote state with a local state file.
+![alt text](image-102.png)
+
+But incase you want to push a random stuff and override the remote state file, terraform can prevent that and save you.
+
+![alt text](image-103.png)
+
+
+# Lifecycle rules
+
+Assume that we have an AWS Instance already created called ami-061......
+
+![alt text](image-105.png)
+
+and if we want to now create another resource called ami-2158c.... now, it will destroy the existing ami-061... and then create the new one.
+
+![alt text](image-104.png)
+
+But wait a minute! What if we want to ensure that, this new resource should be created first and then the old one should be deleted?
+
+We can do that using create_before_destroy attribute. We need to set the value to true and use terraform apply. Once done, we will have the new ami-215... created first.
+
+![alt text](image-106.png)
+
+And then the old one will be destroyed.
+
+![alt text](image-107.png)
+
+What if we don't want to delete this resource we have created right now?
+
+We can set prevent_destroy to true to lock it
+
+![alt text](image-108.png)
+
+But the resource can still be destroyed.
+
+Also, in some cases we might need to change some attributes of an existing resource. 
+
+![alt text](image-109.png)
+For example, here this resource had a tag "Cerverys-Webserver". Later it was changed to 
+"Cerverys-Webserver-1". Then we have decided that we don't want the existing resource to apply this change but it should remain only in the .tf file
+
+To do that, we can use ignore_changes
+
+![alt text](image-110.png)
+
+
+# Terraform taint
+
+Assume that, we have created a resource to print the public ip address of an existing AWS Instance
+
+![alt text](image-111.png)
+
+It might fail due to path issue or any other thing. When this happens, terrafomr taints it. So, once you run the terraform plan command, you can see that.
+
+
+![alt text](image-112.png)
+
+Later when terraform apply command will be used, it will again try to do the task that's tainted.
+
+
+
+# Debugging
+
+To debug any issue, we can check the logs in 5 levels. For example, to set the TRACE level, we can do this.
+
+![alt text](image-113.png)
+
+Then when using the terraform plan command, we can see moew  logs than usual to track the issue.
+
+![alt text](image-114.png)
+
+We can also save logs in a specific location (/tmp/terraform.log)
+![alt text](image-115.png)
+
+
+# Terraform import
+
+Sometimes it can happen that, we have created some resources using terraform, some via other IAC tools like Ansible or, console
+
+![alt text](image-116.png)
+
+But then you have decided to import them within terraform to monitor and work from now.
+
+![alt text](image-117.png)
+
+Assume that we have this resource already created in AWS. Let's copy the unique instance id
+
+![alt text](image-118.png)
+
+Then we have to create an empty resource (just to give it a name) and finally import it using the unique instance id we copied
+
+![alt text](image-119.png)
+
+You can now ask what about the empty attributes? We can now manually add the attributes 
+
+![alt text](image-120.png)
+![alt text](image-122.png)
+and terraform will recognize it  because it already has these information in the terraform state file. So, no actions will be taken meaning it won't be imported or created or anything because it's already done earlier.
+
+![alt text](image-121.png)
+
+
+# Terraform Workspace
+
+Assume that we have a main.tf and variables.tf file and .tfstate file has all of the tracking of the resources creating using main.tf and variables.tf file
+
+![alt text](image-123.png)
+
+What if we plan to have two different workspace which also have same amount of resources created.
+
+For example, here this main.tf and variable.tf file created an instance which has ami set as ami-24e........., instance_type=t2.micro, region=ca-central-1
+
+Let's create 2 workspaces. By default we have workspace set as default.
+
+
+![alt text](image-124.png)
+
+Now, assume our manager mentioned to have same ami instance created in two workspaces created in the same region. But we need to have different instance types.
+
+![alt text](image-125.png)
+
+So, to implement that, we just need to make changes to the main.tf file and variables.tf file (to use map)
+
+![alt text](image-126.png)
+
+Remember that, we created the "development" workspace at last. So, by default we are in the "development" workspace.
+
+![alt text](image-127.png)
+
+
+Now when you use the terraform console, you can see which workspace we are in (surely in the development workspace) and also the instance_type is t2.micro (set using lookup(var.instance_type...........) in the main.tf)
+
+We can move to "production" workspace and check it's instance_type as well
+
+
+![alt text](image-128.png)
+
+But one thing is still not corrected. Both of the resources have tags (Environment= "Development")
+
+So, we want the tags to be set based on the workspace name (production/development)
+
+![alt text](image-129.png)
+
+To do that, just change the Environment to terraform.workspace
+
+
+Now when you are in the "development" workspace, if we use terraform apply, this resource will be created
+
+![alt text](image-130.png)
+
+Check the tags is (Environment = "development"), instance_type= "t2.micro"
+
+When we move to production workspace and apply terraform apply, you can see the tags (Environment="production"), instance_type="m5.large"
+![alt text](image-131.png)
+
+Note: when we use workspace, the tfstate files are saved within .d file
+
+![alt text](image-132.png)
+
+You can see that, terraform.tfstate.d file contains .tfstate file for both the workspaces
+
+
+
+# count , for each variable
+
+We can use count attribute to ensure the number of resources to be created, use a list webservers to set the tag names.
+
+![alt text](image-133.png)
+
+But there are issues. To see this, if we remove web1 from the webservers list, and use terraform apply now
+
+
+![alt text](image-134.png)
+
+
+the first resource will have the tag web2, the second one will have tag web3. The thir resource won't have any tags , so it will be destroyed.
+
+To solve this, we can use for_each now
+
+![alt text](image-136.png)
+
+Then if we apply terraform apply, you can see how it created 3 resources based on the number of webservers (var.webservers)
+
+Then we can set the tags.
+
+![alt text](image-137.png)
+
+Now, if we remove the web1 from webservers ( we dont want to have the first resource any longer)
+
+![alt text](image-138.png)
+
+![alt text](image-139.png)
+
+You can see the resource for the web1 is deleted this time.
+
+Note, when we removed web1 using count, we wanted to remove the first resource but the third was removed. But using for_each, only the first was removed. So mission successful!!
+
+
+
+
+# Provisioners
+
+
+Provisioners are used to execute scripts or commands on a local or remote machine as part of the resource creation or destruction process.
+
+![alt text](image-140.png)
+
+Here we want to execute these inline commands.
+
+But to have proper remote connection and security we need security group and ssh key pair. Let's crteate 2 resources for that
+
+![alt text](image-141.png)
+
+Then we need to set connection
+
+
+![alt text](image-142.png)
+
+Once done, if we use terraform apply, you can see the inline commands are executed.
+
+This was about remote execution. What about local execution?
+
+![alt text](image-143.png)
+For the earlier EC2 instance, it had public IP address. We can store that to a local /tmp/ips.txt file using local execution.
+
+
+We can also use local-exec to check if a resource is destroyed or not.
+
+
+![alt text](image-144.png)
+
+
+Here you can see when that the resource (EC2 instance) was deleted. So, when we wanted to use the content of /tmp/instance_state.txt file, it prints the content.
+
+
+Note: The output would be "Instance 3.96.136.157 Destroyed!"
+
+
+Sometimes it can happen is, if we have any wrong path set, it will show error
+
+![alt text](image-145.png)
+
+If we don't want it to stop and execute other resources, we need to set on_failure= continue
+
+![alt text](image-146.png)
+
+Here you can see that, while creating the webserver, it had issues with the path.So, it skipped this one and moved to create another resourc (aws_instance.project). This aws_instance.project code is not shown here.
+
+
+Note: Terraform encourages not to use provisioners. Instead use cloud specific attributes like user_data, custom_data etc.
+
+For example, earlier we wanted to run inline commands (sudo apt update etc.) using remove exec provisioner.
+
+
+For AWS, we have user_data which can be used instead. 
+![alt text](image-147.png)
+
+This will exactly work like the remote exec provisioner.
+
+
+# Built in functions
+
+Terraform provides various built-in functions to manipulate strings, numbers, collections, and more. Here are some commonly used functions:
+
+Using the terraform console command, we can use built in functions like file(), length() etc to check the values of the file mentioned.
+
+
+![alt text](image-148.png)
+
+Here you can see that, once we provided the ("/root/.......main.tf") file location, it mentioned the resource details. You can also see the number of regions (mentioend in the variable region), change the variables to set
+
+There are more built in functions
+
+![alt text](image-149.png)
+![alt text](image-150.png)
+![alt text](image-151.png)
+
+So, in summary: Use terraform console and use built in functions
+
+You can also use arithmetic operations in the console
+
+![alt text](image-152.png)
+![alt text](image-154.png)
+
+# locals
+
+Again when we need to use same tags multiple time, we can use local block to save it.
+
+![alt text](image-155.png)
+Here, you can see that we saved the  tags in the locals
+
+![alt text](image-156.png)
+
+Now, when we use terraform apply, you can see the tags are applied
+
+![alt text](image-157.png)
+
+You can also use locals to generate bucket name like this
+
+![alt text](image-158.png)
+
+
+For this scenario where we have 2 servers with inbound port 8080 and 22, 
+
+![alt text](image-160.png)
+
+We can create them using
+
+![alt text](image-161.png)
+![alt text](image-162.png)
+
+or, we could use dynamic block to do so very fast:  
+![alt text](image-163.png)
+
+
+# Modules
+
+Modules are containers for multiple resources that are used together. A module can be used to create reusable components, improve organization, and encapsulate complex logic.
+
+Assume that in the /root/terraform-projects/aws-instance folder we have two .tf files. This is currently the active and Root module.
+
+ ![alt text](image-164.png)
+
+ If we create another folder now and use the .tf files kep in another folder (/root/.../aws-instance), the development folder will now be Root module whereas the used folder will be Child Module.
+
+ ![alt text](image-165.png)
+
+
+ In the terraform documentation, you can also find submodules (child modules) like this
+
+ ![alt text](image-166.png)
+
+ So, submodules makes it easy to load other files. In this way, we don't need to have all files in the root module.
+
+
+ For example, assume that this is an architecture we are planning to create
+
+ ![alt text](image-167.png)
+
+Let's create the .tf files within the folder (/root/..../payroll-app)
+
+![alt text](image-168.png)
+![alt text](image-169.png)
+
+So, our goal now is to launch this in different regions and use those files
+
+Let's create another folder called us-payroll-app. We can now use the payroll-app folder's .tf files using source. 
+
+![alt text](image-170.png)
+
+
+Then we can initialize it and apply
+
+![alt text](image-171.png)
+![alt text](image-172.png)
+
+
+We can create another folder named uk-payroll-app which again uses the same .tf files
+
+![alt text](image-173.png)
+
+
+That's it!
