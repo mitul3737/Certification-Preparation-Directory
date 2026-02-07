@@ -652,7 +652,7 @@ To debug any issue, we can check the logs in 5 levels. For example, to set the T
 
 ![alt text](image-113.png)
 
-Then when using the terraform plan command, we can see moew  logs than usual to track the issue.
+Then when using the terraform plan command, we can see more  logs than usual to track the issue.
 
 ![alt text](image-114.png)
 
